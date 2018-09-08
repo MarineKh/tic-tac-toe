@@ -7,7 +7,9 @@ export default class BootScene extends Phaser.Scene {
   }
 
   preload () {
-    this.load.image('mushroom', 'assets/mushroom.png')
+    this.platform = this.load.image('platform', 'assets/imgs/platform.png')
+    this.load.image('x', 'assets/imgs/x.png')
+    this.load.image('o', 'assets/imgs/o.png')
   }
 
   create () {
