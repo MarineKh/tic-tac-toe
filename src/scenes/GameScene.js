@@ -7,6 +7,7 @@ export default class GameScene extends Phaser.Scene {
     super(SCENE_GAME)
     this.clickCount = 0
     this.spaceSize = 10
+    this.matrix = []
   }
 
   getPlatformSize () {
@@ -17,23 +18,73 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create () {
+    this.drawBoard()
+    // reset button
+    const resetButton = this.add.text(0, 50, 'Reset', { fill: '#fff' }).setInteractive()
+    resetButton.setX((gameConfig.width - resetButton.width) / 2)
+    resetButton.on('pointerdown', () => this.resetGame())
+  }
+
+  drawBoard () {
     const boardSize = 3
     const group = this.add.group()
-    // let xPlayer = this.add.sprite(0, 0, 'x')
-    // let oPlayer = this.add.sprite(0, 0, 'o')
+
+    const boardLeft = (gameConfig.width - (3 * this.getPlatformSize() + 2 * this.spaceSize)) / 2
+    const boardTop = (gameConfig.height - (3 * this.getPlatformSize() + 2 * this.spaceSize)) / 2
+
     for (let i = 0; i < boardSize; i++) {
       group.createMultiple({
         key: 'platform',
         repeat: boardSize - 1,
         setXY: {
           x: 0,
-          y: i * 180,
+          y: i * (this.getPlatformSize() + this.spaceSize),
           stepX: this.getPlatformSize() + this.spaceSize,
         },
       })
+      // this.x = boardLeft + i * this.getPlatformSize() + i * this.spaceSize + this.getPlatformSize() / 2
+      // this.y = boardTop + i * this.getPlatformSize() + i * this.spaceSize + this.getPlatformSize() / 2
+      this.x = 130
+      this.y = 230
     }
-    Phaser.Actions.IncX(group.getChildren(), 100)
-    Phaser.Actions.IncY(group.getChildren(), 100)
+
+    Phaser.Actions.IncX(group.getChildren(), this.x)
+    Phaser.Actions.IncY(group.getChildren(), this.y)
+
+    let children = group.getChildren()
+    for (let i = 0; i < children.length; i++) {
+      children[i].setInteractive()
+      children[i].once('pointerdown', () => this.drawSymbol(children[i].x, children[i].y, this.getPlatformSize()))
+    }
+  }
+  resetGame () {
+    this.scene.restart()
+  }
+
+  getXSize () {
+    this.xImg = this.add.image(0, 0, 'x')
+    const { width, height } = this.xImg
+    this.xImg.destroy()
+    return width
+  }
+  getOSize () {
+    this.oImg = this.add.image(0, 0, 'o')
+    const { width, height } = this.oImg
+    this.oImg.destroy()
+    return width
+  }
+
+  drawSymbol (platformX, platformY, platformSize) {
+    this.clickCount++
+
+    const textX = platformX + (platformSize - this.getXSize()) / 2 - platformSize / 2
+    const textY = platformY + (platformSize - this.getXSize()) / 2 - platformSize / 2
+
+    if (this.clickCount % 2 === 1) {
+      this.symbol = this.add.image(textX, textY, 'x')
+    } else {
+      this.symbol = this.add.image(textX, textY, 'o')
+    }
   }
 
   // drawBoard = (squareSize) => {
