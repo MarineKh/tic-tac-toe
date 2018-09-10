@@ -20,9 +20,21 @@ export default class GameScene extends Phaser.Scene {
   create () {
     this.drawBoard()
     // reset button
-    const resetButton = this.add.text(0, 50, 'Reset', { fill: '#fff' }).setInteractive()
+    const resetButton = this.add.text(0, 40, 'Reset', { fill: '#fff' }).setInteractive()
     resetButton.setX((gameConfig.width - resetButton.width) / 2)
     resetButton.on('pointerdown', () => this.resetGame())
+
+    // players and score text
+    const playerX = this.add.text(100, 80, 'PLAYER(X)')
+    this.playerXWinCount = this.add.text(130, 110, '0', { fontSize: 20, fontStyle: 'bold' })
+
+    const playerO = this.add.text(400, 80, 'PLAYER(O)')
+    this.playerOWinCount = this.add.text(430, 110, '0', { fontSize: 20, fontStyle: 'bold' })
+
+    const tie = this.add.text(0, 80, 'TIE')
+    this.tieCount = this.add.text(0, 110, '0', { fontSize: 20, fontStyle: 'bold' })
+    tie.setX((gameConfig.width - tie.width) / 2)
+    this.tieCount.setX((gameConfig.width - tie.width) / 2 + 10)
   }
 
   drawBoard () {
@@ -33,6 +45,9 @@ export default class GameScene extends Phaser.Scene {
     const boardTop = (gameConfig.height - (3 * this.getPlatformSize() + 2 * this.spaceSize)) / 2
 
     for (let i = 0; i < boardSize; i++) {
+      // this.matrix.push([])
+
+      // this.matrix[i] = null
       group.createMultiple({
         key: 'platform',
         repeat: boardSize - 1,
@@ -48,6 +63,7 @@ export default class GameScene extends Phaser.Scene {
       this.y = 230
     }
 
+    console.log(this.matrix)
     Phaser.Actions.IncX(group.getChildren(), this.x)
     Phaser.Actions.IncY(group.getChildren(), this.y)
 
@@ -116,7 +132,75 @@ export default class GameScene extends Phaser.Scene {
   //   this.text.x = textX
   //   this.text.y = textY
   // }
-
+  // checkWinner = () => {
+  //   let matrix = this.matrix
+  //   // check rows
+  //   for (let i = 0, j = 0; i <= 2; i++) {
+  //     if (matrix[i][j] && matrix[i][j] === matrix[i][j + 1] && matrix[i][j + 1] === matrix[i][j + 2]) {
+  //       if (matrix[i][j] === 'X') {
+  //         console.log('x win')
+  //         let setXscore = ++this.scoreX
+  //         localStorage.setItem('xKey', setXscore)
+  //         this.updateXScore()
+  //         // this.resetGame()
+  //       } else {
+  //         console.log('o win')
+  //         let setOscore = ++this.scoreO
+  //         localStorage.setItem('oKey', setOscore)
+  //         this.updateOScore()
+  //         // this.resetGame()
+  //       }
+  //     }
+  //   }
+  //   // check columns
+  //   for (let i = 0, j = 0; i <= 2; i++) {
+  //     if (matrix[j][i] && matrix[j][i] === matrix[j + 1][i] && matrix[j + 1][i] === matrix[j + 2][i]) {
+  //       if (matrix[j][i] === 'X') {
+  //         console.log('x win')
+  //         let setXscore = ++this.scoreX
+  //         localStorage.setItem('xKey', setXscore)
+  //         this.updateXScore()
+  //         // this.resetGame()
+  //       } else {
+  //         console.log('o win')
+  //         let setOscore = ++this.scoreO
+  //         localStorage.setItem('oKey', setOscore)
+  //         this.updateOScore()
+  //         // this.resetGame()
+  //       }
+  //     }
+  //   }
+  //   // check diagonals
+  //   if (matrix[0][0] && matrix[0][0] === matrix[1][1] && matrix[1][1] === matrix[2][2]) {
+  //     if (matrix[0][0] === 'X') {
+  //       console.log('x win')
+  //       let setXscore = ++this.scoreX
+  //       localStorage.setItem('xKey', setXscore)
+  //       this.updateXScore()
+  //       // this.resetGame()
+  //     } else {
+  //       console.log('o win')
+  //       let setOscore = ++this.scoreO
+  //       localStorage.setItem('oKey', setOscore)
+  //       this.updateOScore()
+  //       // this.resetGame()
+  //     }
+  //   } else if (matrix[0][2] && matrix[0][2] === matrix[1][1] && matrix[1][1] === matrix[2][0]) {
+  //     if (matrix[0][2] === 'X') {
+  //       console.log('x win')
+  //       let setXscore = ++this.scoreX
+  //       localStorage.setItem('xKey', setXscore)
+  //       this.updateXScore()
+  //       // this.resetGame()
+  //     } else {
+  //       console.log('o win')
+  //       let setOscore = ++this.scoreO
+  //       localStorage.setItem('oKey', setOscore)
+  //       this.updateOScore()
+  //       // this.resetGame()
+  //     }
+  //   }
+  // }
   update () {
 
   }
