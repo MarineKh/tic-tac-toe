@@ -22,7 +22,6 @@ export default class GameScene extends Phaser.Scene {
         secondaryDiagonal: []
       }
     }
-    // this.matrix = []
   }
 
   getRowsColumnsData () {
@@ -72,39 +71,36 @@ export default class GameScene extends Phaser.Scene {
 
   drawSymbol (pointer, target) {
     this.clickCount++
-    const symbol = this.clickCount % 2 === 1 ? 'x' : 'o'
-    const image = this.add.image(0, 0, symbol)
+    this.character = this.clickCount % 2 === 1 ? 'x' : 'o'
+    const image = this.add.image(0, 0, this.character)
     target.add(image)
     target.removeInteractive()
 
     const [i, j] = target.getData(['i', 'j'])
 
-    this.gameData[symbol].rows[i].push(j)
-    this.gameData[symbol].columns[j].push(i)
+    this.gameData[this.character].rows[i].push(j)
+    this.gameData[this.character].columns[j].push(i)
 
     if (i === j) {
-      this.gameData[symbol].mainDiagonal.push(i)
+      this.gameData[this.character].mainDiagonal.push(i)
     }
 
     if (i + j === this.boardSize - 1) {
-      this.gameData[symbol].secondaryDiagonal.push(i)
+      this.gameData[this.character].secondaryDiagonal.push(i)
     }
 
     const maxLength = Math.max(
-      this.gameData[symbol].rows[i].length,
-      this.gameData[symbol].columns[j].length,
-      this.gameData[symbol].mainDiagonal.length,
-      this.gameData[symbol].secondaryDiagonal.length
+      this.gameData[this.character].rows[i].length,
+      this.gameData[this.character].columns[j].length,
+      this.gameData[this.character].mainDiagonal.length,
+      this.gameData[this.character].secondaryDiagonal.length
     )
 
     if (maxLength === this.boardSize) {
-      this.add.text(10, 10, `winner ${symbol}`)
-      console.log('Win ' + symbol)
-      this.scene.pause(SCENE_GAME)
+      this.winner()
+    } else {
+      console.log('nobody')
     }
-    // 00 01 02
-    // 10 11 12
-    // 20 21 22
 
     // this.gameData = {
     //   x: {
@@ -124,6 +120,18 @@ export default class GameScene extends Phaser.Scene {
     //     secondaryDiagonal: [],
     //   },
     // }
+  }
+
+  winner () {
+    const winner = this.add.text(0, 100, `The winner is ${this.character}`, {
+      font: '25px Arial',
+      fill: '#fff'
+    })
+    winner.setStroke('#292929', 16)
+    winner.setShadow(2, 2, '#743f4a', 2, true, true)
+    winner.setX((gameConfig.width - winner.width) / 2)
+
+    this.scene.pause(SCENE_GAME)
   }
 
   update () {}
