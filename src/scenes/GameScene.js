@@ -40,6 +40,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create () {
+    // main game
     this.boardContainer = this.add.container(0, 0)
     for (let i = 0; i < 3; ++i) {
       for (let j = 0; j < 3; ++j) {
@@ -67,6 +68,11 @@ export default class GameScene extends Phaser.Scene {
       (gameConfig.width - 2 * (this.getPlatformSize() + this.spaceSize)) / 2
     this.boardContainer.y =
       (gameConfig.height - 2 * (this.getPlatformSize() + this.spaceSize)) / 2
+
+    // // play button
+    // this.playBtn = this.add.image(0, 0, 'playBtn').setInteractive()
+    // this.playBtn.setX(gameConfig.width / 2)
+    // this.playBtn.setY(gameConfig.width / 2)
   }
 
   drawSymbol (pointer, target) {
@@ -98,8 +104,6 @@ export default class GameScene extends Phaser.Scene {
 
     if (maxLength === this.boardSize) {
       this.winner()
-    } else {
-      console.log('nobody')
     }
 
     // this.gameData = {
