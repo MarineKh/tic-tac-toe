@@ -10,7 +10,7 @@ export default class BootScene extends Phaser.Scene {
     this.platform = this.load.image('platform', 'assets/imgs/platform.png')
     this.load.image('x', 'assets/imgs/x.png')
     this.load.image('o', 'assets/imgs/o.png')
-    this.load.image('playBtn', 'assets/imgs/play.png')
+    this.load.image('reset', 'assets/imgs/reset.png')
   }
 
   create () {

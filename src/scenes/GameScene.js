@@ -26,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
       for (let j = 0; j < 3; ++j) {
         const platformContainer = this.add.container(
           i * (this.getPlatformSize() + this.spaceSize),
-          j * (this.getPlatformSize() + this.spaceSize),
+          j * (this.getPlatformSize() + this.spaceSize)
         )
         const platform = this.add.image(0, 0, 'platform')
         platformContainer.setInteractive(
@@ -34,31 +34,38 @@ export default class GameScene extends Phaser.Scene {
             -platform.width / 2,
             -platform.height / 2,
             platform.width,
-            platform.height,
+            platform.height
           ),
-          Phaser.Geom.Rectangle.Contains,
+          Phaser.Geom.Rectangle.Contains
         )
         platformContainer.add(platform)
         this.boardContainer.add(platformContainer)
         platformContainer.setData({ i, j })
       }
     }
-    this.input.on('gameobjectdown', this.drawSymbol, this)
+    this.input.on('gameobjectdown', this.drawSymbol.bind(this), false)
+
     this.boardContainer.x =
       (gameConfig.width - 2 * (this.getPlatformSize() + this.spaceSize)) / 2
     this.boardContainer.y =
       (gameConfig.height - 2 * (this.getPlatformSize() + this.spaceSize)) / 2
 
-    // // play button
-    // this.playBtn = this.add.image(0, 0, 'playBtn').setInteractive()
+    // reset button
+    // console.log(this.add.image)
+    // this.playBtn = this.add.image(0, 700, 'reset').setInteractive()
     // this.playBtn.setX(gameConfig.width / 2)
-    // this.playBtn.setY(gameConfig.width / 2)
+    // this.playBtn.on('pointerdown', e => console.log(e), false)
   }
+
+  // resetBtn () {
+  //   this.scene.pause(SCENE_GAME)
+  // }
 
   drawSymbol (pointer, target) {
     this.clickCount++
     this.character = this.clickCount % 2 === 1 ? 'x' : 'o'
     const image = this.add.image(0, 0, this.character)
+
     target.add(image)
     target.removeInteractive()
 
@@ -81,7 +88,7 @@ export default class GameScene extends Phaser.Scene {
   noWinner () {
     const noWinner = this.add.text(0, 100, 'No Winner', {
       font: '25px Arial',
-      fill: '#fff',
+      fill: '#fff'
     })
     noWinner.setStroke('#292929', 16)
     noWinner.setShadow(2, 2, '#743f4a', 2, true, true)
@@ -91,7 +98,7 @@ export default class GameScene extends Phaser.Scene {
   winner () {
     const winner = this.add.text(0, 100, `The winner is ${this.character}`, {
       font: '25px Arial',
-      fill: '#fff',
+      fill: '#fff'
     })
     winner.setStroke('#292929', 16)
     winner.setShadow(2, 2, '#743f4a', 2, true, true)

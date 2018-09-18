@@ -37,7 +37,7 @@ export default class Game {
       this[character].rows[i].length,
       this[character].columns[j].length,
       this[character].mainDiagonal.length,
-      this[character].secondaryDiagonal.length,
+      this[character].secondaryDiagonal.length
     )
   }
 }
@@ -58,11 +58,3 @@ class PlayerData {
     return object
   }
 }
-
-// for (let el in this.gameData) {
-//     if (typeof this.gameData[el] === 'object') {
-//       for (let key in this.gameData[el]['rows']) {
-//         boardLenght += this.gameData[el]['rows'][key].length
-//       }
-//     }
-//   }
