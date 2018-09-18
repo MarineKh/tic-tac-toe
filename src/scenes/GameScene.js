@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { SCENE_GAME } from '../constants/Constants'
 import { gameConfig } from '../constants/GameConfig'
+import Game from '../data/Game'
 
 export default class GameScene extends Phaser.Scene {
   constructor () {
@@ -8,28 +9,7 @@ export default class GameScene extends Phaser.Scene {
     this.boardSize = 3
     this.clickCount = 0
     this.spaceSize = 10
-    this.gameData = {
-      x: {
-        rows: this.getRowsColumnsData(),
-        columns: this.getRowsColumnsData(),
-        mainDiagonal: [],
-        secondaryDiagonal: []
-      },
-      o: {
-        rows: this.getRowsColumnsData(),
-        columns: this.getRowsColumnsData(),
-        mainDiagonal: [],
-        secondaryDiagonal: []
-      }
-    }
-  }
-
-  getRowsColumnsData () {
-    const object = {}
-    for (let i = 0; i < this.boardSize; i++) {
-      object[i] = []
-    }
-    return object
+    this.gameData = new Game(this.boardSize)
   }
 
   getPlatformSize () {
@@ -46,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
       for (let j = 0; j < 3; ++j) {
         const platformContainer = this.add.container(
           i * (this.getPlatformSize() + this.spaceSize),
-          j * (this.getPlatformSize() + this.spaceSize)
+          j * (this.getPlatformSize() + this.spaceSize),
         )
         const platform = this.add.image(0, 0, 'platform')
         platformContainer.setInteractive(
@@ -54,9 +34,9 @@ export default class GameScene extends Phaser.Scene {
             -platform.width / 2,
             -platform.height / 2,
             platform.width,
-            platform.height
+            platform.height,
           ),
-          Phaser.Geom.Rectangle.Contains
+          Phaser.Geom.Rectangle.Contains,
         )
         platformContainer.add(platform)
         this.boardContainer.add(platformContainer)
@@ -84,52 +64,34 @@ export default class GameScene extends Phaser.Scene {
 
     const [i, j] = target.getData(['i', 'j'])
 
-    this.gameData[this.character].rows[i].push(j)
-    this.gameData[this.character].columns[j].push(i)
+    this.gameData.makeMove(this.character, i, j)
 
-    if (i === j) {
-      this.gameData[this.character].mainDiagonal.push(i)
+    const maxLength = this.gameData.getMaxLegth(this.character, i, j)
+    const getFillBoardlength = this.gameData.getFillBoardlength()
+
+    if (getFillBoardlength === this.boardSize * this.boardSize) {
+      this.noWinner()
     }
-
-    if (i + j === this.boardSize - 1) {
-      this.gameData[this.character].secondaryDiagonal.push(i)
-    }
-
-    const maxLength = Math.max(
-      this.gameData[this.character].rows[i].length,
-      this.gameData[this.character].columns[j].length,
-      this.gameData[this.character].mainDiagonal.length,
-      this.gameData[this.character].secondaryDiagonal.length
-    )
 
     if (maxLength === this.boardSize) {
       this.winner()
     }
+  }
 
-    // this.gameData = {
-    //   x: {
-    //     rows: {
-    //       0: ["a"],
-    //       1: ["a"],
-    //       2: []
-    //     },
-    //     columns: { ...initialData },
-    //     mainDiagonal: [],
-    //     secondaryDiagonal: [],
-    //   },
-    //   o: {
-    //     rows: { ...initialData },
-    //     columns: { ...initialData },
-    //     mainDiagonal: [],
-    //     secondaryDiagonal: [],
-    //   },
-    // }
+  noWinner () {
+    const noWinner = this.add.text(0, 100, 'No Winner', {
+      font: '25px Arial',
+      fill: '#fff',
+    })
+    noWinner.setStroke('#292929', 16)
+    noWinner.setShadow(2, 2, '#743f4a', 2, true, true)
+    noWinner.setX((gameConfig.width - noWinner.width) / 2)
   }
 
   winner () {
     const winner = this.add.text(0, 100, `The winner is ${this.character}`, {
       font: '25px Arial',
-      fill: '#fff'
+      fill: '#fff',
     })
     winner.setStroke('#292929', 16)
     winner.setShadow(2, 2, '#743f4a', 2, true, true)
