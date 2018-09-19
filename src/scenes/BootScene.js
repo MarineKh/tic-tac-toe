@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { SCENE_BOOT, SCENE_GAME } from '../constants/Constants'
+import { SCENE_BOOT, SCENE_GAME, SCENE_UI } from '../constants/Constants'
 
 export default class BootScene extends Phaser.Scene {
   constructor () {
@@ -15,5 +15,7 @@ export default class BootScene extends Phaser.Scene {
 
   create () {
     this.scene.start(SCENE_GAME)
+    this.scene.start(SCENE_UI)
+    this.scene.bringToTop(SCENE_UI)
   }
 }
