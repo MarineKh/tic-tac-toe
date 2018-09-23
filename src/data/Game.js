@@ -6,15 +6,15 @@ export default class Game {
   }
 
   makeMove (character, i, j) {
-    this[character].rows[i].push(j)
-    this[character].columns[j].push(i)
+    this[character].rows[i].push([j, i])
+    this[character].columns[j].push([j, i])
 
     if (i === j) {
-      this[character].mainDiagonal.push(i)
+      this[character].mainDiagonal.push([j, i])
     }
 
     if (i + j === this.boardSize - 1) {
-      this[character].secondaryDiagonal.push(i)
+      this[character].secondaryDiagonal.push([j, i])
     }
   }
 
@@ -37,7 +37,7 @@ export default class Game {
       this[character].rows[i].length,
       this[character].columns[j].length,
       this[character].mainDiagonal.length,
-      this[character].secondaryDiagonal.length
+      this[character].secondaryDiagonal.length,
     )
   }
 }

@@ -52,6 +52,35 @@ export default class GameScene extends Phaser.Scene {
   }
 
   drawSymbol (pointer, target) {
+    let arr = []
+
+    for (let i = 0; i < this.boardSize; i++) {
+      for (let j = 0; j < this.boardSize; j++) {
+        arr.push([i, j])
+      }
+    }
+
+    for (let key in this.gameData) {
+      if (key === 'x' || key === 'o') {
+        for (let el in this.gameData[key]['rows']) {
+          this.gameData[key]['rows'][el].forEach(element => {
+            let index = arr.findIndex(a =>
+              a.every((val, i) => element[i] === val),
+            )
+            console.log(element)
+
+            if (index !== -1) {
+              arr.splice(index, 1)
+            }
+          })
+        }
+      }
+    }
+    console.log(arr)
+
+    var randomItem = arr[Math.floor(Math.random() * arr.length)]
+    console.log(randomItem)
+
     this.clickCount++
     this.character = this.clickCount % 2 === 1 ? 'x' : 'o'
     const image = this.add.image(0, 0, this.character)
@@ -73,6 +102,7 @@ export default class GameScene extends Phaser.Scene {
     if (maxLength === this.boardSize) {
       this.winner()
     }
+    // console.log(this.gameData)
   }
 
   noWinner () {
