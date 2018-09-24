@@ -26,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
       for (let j = 0; j < 3; ++j) {
         const platformContainer = this.add.container(
           i * (this.getPlatformSize() + this.spaceSize),
-          j * (this.getPlatformSize() + this.spaceSize),
+          j * (this.getPlatformSize() + this.spaceSize)
         )
         const platform = this.add.image(0, 0, 'platform')
         platformContainer.setInteractive(
@@ -34,9 +34,9 @@ export default class GameScene extends Phaser.Scene {
             -platform.width / 2,
             -platform.height / 2,
             platform.width,
-            platform.height,
+            platform.height
           ),
-          Phaser.Geom.Rectangle.Contains,
+          Phaser.Geom.Rectangle.Contains
         )
         platformContainer.add(platform)
         this.boardContainer.add(platformContainer)
@@ -52,73 +52,71 @@ export default class GameScene extends Phaser.Scene {
   }
 
   drawSymbol (pointer, target) {
-    let arr = []
-
-    for (let i = 0; i < this.boardSize; i++) {
-      for (let j = 0; j < this.boardSize; j++) {
-        arr.push([i, j])
-      }
-    }
-
-    for (let key in this.gameData) {
-      if (key === 'x' || key === 'o') {
-        for (let el in this.gameData[key]['rows']) {
-          this.gameData[key]['rows'][el].forEach(element => {
-            let index = arr.findIndex(a =>
-              a.every((val, i) => element[i] === val),
-            )
-            console.log(element)
-
-            if (index !== -1) {
-              arr.splice(index, 1)
-            }
-          })
-        }
-      }
-    }
-    console.log(arr)
-
-    var randomItem = arr[Math.floor(Math.random() * arr.length)]
-    console.log(randomItem)
-
-    this.clickCount++
-    this.character = this.clickCount % 2 === 1 ? 'x' : 'o'
-    const image = this.add.image(0, 0, this.character)
-
-    target.add(image)
-    target.removeInteractive()
-
+    // this.clickCount++
+    // this.character = this.clickCount % 2 === 1 ? 'x' : 'o'
+    const x = this.add.image(0, 0, 'x')
     const [i, j] = target.getData(['i', 'j'])
 
-    this.gameData.makeMove(this.character, i, j)
+    target.add(x)
+    target.removeInteractive()
 
-    const maxLength = this.gameData.getMaxLegth(this.character, i, j)
-    const getFillBoardlength = this.gameData.getFillBoardlength()
+    this.findWinner('x', i, j)
+    this.ai()
+  }
 
-    if (getFillBoardlength === this.boardSize * this.boardSize) {
+  findWinner (char, i, j) {
+    this.gameData.makeMove(char, i, j)
+    const maxLength = this.gameData.getMaxLegth(char, i, j)
+    const getFilledBoardlength = this.gameData.getFilledBoardlength()
+
+    if (getFilledBoardlength === this.boardSize * this.boardSize) {
       this.noWinner()
     }
-
     if (maxLength === this.boardSize) {
-      this.winner()
+      this.winner(char)
+      this.win = true
     }
-    // console.log(this.gameData)
+    this.gameData.getCurrentBoard()
+    // console.log(this.gameData.getCurrentBoard())
+  }
+
+  ai () {
+    const currentBoard = this.gameData.getCurrentBoard()
+    if (currentBoard.length === 0 || this.win) {
+      return
+    }
+    let random = Math.floor(Math.random() * currentBoard.length)
+    let countBoard
+    this.boardContainer.list.forEach((item, index) => {
+      if (
+        currentBoard[random] &&
+        item.data.list.i === currentBoard[random][0] &&
+        item.data.list.j === currentBoard[random][1]
+      ) {
+        countBoard = index
+      }
+    })
+
+    const o = this.add.image(0, 0, 'o')
+    this.boardContainer.list[countBoard].add(o).removeInteractive()
+
+    this.findWinner('o', currentBoard[random][0], currentBoard[random][1])
   }
 
   noWinner () {
     const noWinner = this.add.text(0, 100, 'No Winner', {
       font: '25px Arial',
-      fill: '#fff',
+      fill: '#fff'
     })
     noWinner.setStroke('#292929', 16)
     noWinner.setShadow(2, 2, '#743f4a', 2, true, true)
     noWinner.setX((gameConfig.width - noWinner.width) / 2)
   }
 
-  winner () {
-    const winner = this.add.text(0, 100, `The winner is ${this.character}`, {
+  winner (char) {
+    const winner = this.add.text(0, 100, `The winner is ${char}`, {
       font: '25px Arial',
-      fill: '#fff',
+      fill: '#fff'
     })
     winner.setStroke('#292929', 16)
     winner.setShadow(2, 2, '#743f4a', 2, true, true)

@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
-import { SCENE_UI } from '../constants/Constants'
+import { SCENE_GAME, SCENE_UI } from '../constants/Constants'
 import { gameConfig } from '../constants/GameConfig'
+// import { GameScene } from '../scenes/GameScene'
 
 export default class UIScene extends Phaser.Scene {
   constructor () {
@@ -15,7 +16,12 @@ export default class UIScene extends Phaser.Scene {
   }
 
   resetBtn () {
+    window.location.href = window.location.href
     // this.scene.reset()
+    // GameScene.scene.restart()
+    // this.scene.restart(GameScene)
+    this.scene.pause(SCENE_GAME)
+
     console.log('Reset')
   }
 }
