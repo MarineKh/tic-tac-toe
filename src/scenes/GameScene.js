@@ -103,25 +103,22 @@ export default class GameScene extends Phaser.Scene {
     this.findWinner('o', currentBoard[random][0], currentBoard[random][1])
   }
 
-  noWinner () {
-    const noWinner = this.add.text(0, 100, 'No Winner', {
+  gameResult (res) {
+    const result = this.add.text(0, 100, res, {
       font: '25px Arial',
       fill: '#fff'
     })
-    noWinner.setStroke('#292929', 16)
-    noWinner.setShadow(2, 2, '#743f4a', 2, true, true)
-    noWinner.setX((gameConfig.width - noWinner.width) / 2)
+    result.setStroke('#292929', 16)
+    result.setShadow(2, 2, '#743f4a', 2, true, true)
+    result.setX((gameConfig.width - result.width) / 2)
+  }
+
+  noWinner () {
+    this.gameResult('No Winner')
   }
 
   winner (char) {
-    const winner = this.add.text(0, 100, `The winner is ${char}`, {
-      font: '25px Arial',
-      fill: '#fff'
-    })
-    winner.setStroke('#292929', 16)
-    winner.setShadow(2, 2, '#743f4a', 2, true, true)
-    winner.setX((gameConfig.width - winner.width) / 2)
-
+    this.gameResult(`The winner is ${char}`)
     this.scene.pause(SCENE_GAME)
   }
 
