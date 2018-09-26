@@ -26,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
       for (let j = 0; j < 3; ++j) {
         const platformContainer = this.add.container(
           i * (this.getPlatformSize() + this.spaceSize),
-          j * (this.getPlatformSize() + this.spaceSize)
+          j * (this.getPlatformSize() + this.spaceSize),
         )
         const platform = this.add.image(0, 0, 'platform')
         platformContainer.setInteractive(
@@ -34,9 +34,9 @@ export default class GameScene extends Phaser.Scene {
             -platform.width / 2,
             -platform.height / 2,
             platform.width,
-            platform.height
+            platform.height,
           ),
-          Phaser.Geom.Rectangle.Contains
+          Phaser.Geom.Rectangle.Contains,
         )
         platformContainer.add(platform)
         this.boardContainer.add(platformContainer)
@@ -85,6 +85,7 @@ export default class GameScene extends Phaser.Scene {
     if (currentBoard.length === 0 || this.win) {
       return
     }
+    // random step
     let random = Math.floor(Math.random() * currentBoard.length)
     let countBoard
     this.boardContainer.list.forEach((item, index) => {
@@ -97,16 +98,80 @@ export default class GameScene extends Phaser.Scene {
       }
     })
 
+    let mainDiagonal = 0
+    let secondDiagonal = 0
+
+    currentBoard.forEach(el => {
+      if (el[0] === el[1]) {
+        mainDiagonal++
+      }
+      if (el[0] + el[1] === this.boardSize - 1) {
+        secondDiagonal++
+      }
+    })
+
+    // let obj = currentBoard.reduce((acc, value) => {
+    //   if (!acc.value[0] && !acc.value) {
+    //     acc.value[0] = [value]
+    //   } else {
+    //     acc.value[0].push(value)
+    //   }
+    // }, {})
+    console.log(obj)
+    // mainDiagonal
+    if (mainDiagonal === 1) {
+      let mainFilter = currentBoard.filter(item => item[0] === item[1])
+      let mainCount
+
+      this.boardContainer.list.forEach((item, index) => {
+        if (
+          mainFilter[0] &&
+          item.data.list.i === mainFilter[0][0] &&
+          item.data.list.j === mainFilter[0][1]
+        ) {
+          mainCount = index
+        }
+      })
+
+      const o = this.add.image(0, 0, 'o')
+      this.boardContainer.list[mainCount].add(o).removeInteractive()
+
+      this.findWinner('o', mainFilter[0][0], mainFilter[0][1])
+      return
+    }
+
+    // secondDiagonal
+    if (secondDiagonal === 1) {
+      let secondFilter = currentBoard.filter(
+        item => item[0] + item[1] === this.boardSize - 1,
+      )
+      let secondCount
+      this.boardContainer.list.forEach((item, index) => {
+        if (
+          secondFilter[0] &&
+          item.data.list.i === secondFilter[0][0] &&
+          item.data.list.j === secondFilter[0][1]
+        ) {
+          secondCount = index
+        }
+      })
+      const o = this.add.image(0, 0, 'o')
+      this.boardContainer.list[secondCount].add(o).removeInteractive()
+
+      this.findWinner('o', secondFilter[0][0], secondFilter[0][1])
+      return
+    }
+
     const o = this.add.image(0, 0, 'o')
-    this.boardContainer.list[countBoard].add(o).removeInteractive()
 
     this.findWinner('o', currentBoard[random][0], currentBoard[random][1])
+    this.boardContainer.list[countBoard].add(o).removeInteractive()
   }
 
   gameResult (res) {
     const result = this.add.text(0, 100, res, {
       font: '25px Arial',
-      fill: '#fff'
+      fill: '#fff',
     })
     result.setStroke('#292929', 16)
     result.setShadow(2, 2, '#743f4a', 2, true, true)

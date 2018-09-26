@@ -16,12 +16,10 @@ export default class UIScene extends Phaser.Scene {
   }
 
   resetBtn () {
-    window.location.href = window.location.href
+    location.reload()
     // this.scene.reset()
     // GameScene.scene.restart()
     // this.scene.restart(GameScene)
-    this.scene.pause(SCENE_GAME)
-
     console.log('Reset')
   }
 }
