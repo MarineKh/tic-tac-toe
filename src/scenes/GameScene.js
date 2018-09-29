@@ -10,6 +10,7 @@ export default class GameScene extends Phaser.Scene {
     this.clickCount = 0
     this.spaceSize = 10
     this.gameData = new Game(this.boardSize)
+    this.containersMatix = []
   }
 
   getPlatformSize () {
@@ -23,6 +24,7 @@ export default class GameScene extends Phaser.Scene {
     // main game
     this.boardContainer = this.add.container(0, 0)
     for (let i = 0; i < 3; ++i) {
+      this.containersMatix.push([])
       for (let j = 0; j < 3; ++j) {
         const platformContainer = this.add.container(
           i * (this.getPlatformSize() + this.spaceSize),
@@ -41,6 +43,7 @@ export default class GameScene extends Phaser.Scene {
         platformContainer.add(platform)
         this.boardContainer.add(platformContainer)
         platformContainer.setData({ i, j })
+        this.containersMatix[i].push(platformContainer)
       }
     }
     this.input.on('gameobjectdown', this.drawSymbol.bind(this), false)
@@ -52,16 +55,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   drawSymbol (pointer, target) {
-    // this.clickCount++
-    // this.character = this.clickCount % 2 === 1 ? 'x' : 'o'
     const x = this.add.image(0, 0, 'x')
     const [i, j] = target.getData(['i', 'j'])
+    target.add(x).removeInteractive()
 
-    target.add(x)
-    target.removeInteractive()
-
-    this.findWinner('x', i, j)
-    this.ai()
+    const a = this.findWinner('x', i, j)
+    if (a < 9 && !this.win) {
+      this.ai()
+    }
   }
 
   findWinner (char, i, j) {
@@ -77,95 +78,160 @@ export default class GameScene extends Phaser.Scene {
       this.win = true
     }
     this.gameData.getCurrentBoard()
-    // console.log(this.gameData.getCurrentBoard())
+    return getFilledBoardlength
   }
 
   ai () {
-    const currentBoard = this.gameData.getCurrentBoard()
-    if (currentBoard.length === 0 || this.win) {
-      return
-    }
-    // random step
-    let random = Math.floor(Math.random() * currentBoard.length)
-    let countBoard
-    this.boardContainer.list.forEach((item, index) => {
-      if (
-        currentBoard[random] &&
-        item.data.list.i === currentBoard[random][0] &&
-        item.data.list.j === currentBoard[random][1]
-      ) {
-        countBoard = index
-      }
-    })
+    let i
+    let j
 
-    let mainDiagonal = 0
-    let secondDiagonal = 0
+    const oProbWin = this.probableWin('o')
+    const matrix = this.getMatrix()
 
-    currentBoard.forEach(el => {
-      if (el[0] === el[1]) {
-        mainDiagonal++
-      }
-      if (el[0] + el[1] === this.boardSize - 1) {
-        secondDiagonal++
-      }
-    })
-
-    // let obj = currentBoard.reduce((acc, value) => {
-    //   if (!acc.value[0] && !acc.value) {
-    //     acc.value[0] = [value]
-    //   } else {
-    //     acc.value[0].push(value)
-    //   }
-    // }, {})
-    console.log(obj)
-    // mainDiagonal
-    if (mainDiagonal === 1) {
-      let mainFilter = currentBoard.filter(item => item[0] === item[1])
-      let mainCount
-
-      this.boardContainer.list.forEach((item, index) => {
-        if (
-          mainFilter[0] &&
-          item.data.list.i === mainFilter[0][0] &&
-          item.data.list.j === mainFilter[0][1]
-        ) {
-          mainCount = index
+    if (oProbWin && matrix[oProbWin.i][oProbWin.j] === null) {
+      i = oProbWin.i
+      j = oProbWin.j
+    } else {
+      const xProbWin = this.probableWin('x')
+      console.log(xProbWin, 'xProbWin')
+      if (xProbWin && matrix[xProbWin.i][xProbWin.j] === null) {
+        i = xProbWin.i
+        j = xProbWin.j
+      } else {
+        if (matrix[1][1] === null) {
+          i = 1
+          j = 1
+        } else {
+          const corners = this.getCorners(matrix)
+          if (corners) {
+            i = corners.i
+            j = corners.j
+          } else {
+            const random = this.getRandom(matrix)
+            i = random.i
+            j = random.j
+          }
         }
-      })
-
-      const o = this.add.image(0, 0, 'o')
-      this.boardContainer.list[mainCount].add(o).removeInteractive()
-
-      this.findWinner('o', mainFilter[0][0], mainFilter[0][1])
-      return
+      }
     }
-
-    // secondDiagonal
-    if (secondDiagonal === 1) {
-      let secondFilter = currentBoard.filter(
-        item => item[0] + item[1] === this.boardSize - 1,
-      )
-      let secondCount
-      this.boardContainer.list.forEach((item, index) => {
-        if (
-          secondFilter[0] &&
-          item.data.list.i === secondFilter[0][0] &&
-          item.data.list.j === secondFilter[0][1]
-        ) {
-          secondCount = index
-        }
-      })
-      const o = this.add.image(0, 0, 'o')
-      this.boardContainer.list[secondCount].add(o).removeInteractive()
-
-      this.findWinner('o', secondFilter[0][0], secondFilter[0][1])
-      return
-    }
-
+    console.log(i, j)
     const o = this.add.image(0, 0, 'o')
+    const container = this.containersMatix[j][i]
 
-    this.findWinner('o', currentBoard[random][0], currentBoard[random][1])
-    this.boardContainer.list[countBoard].add(o).removeInteractive()
+    const [containerI, containerJ] = container.getData(['i', 'j'])
+
+    container.add(o).removeInteractive()
+
+    this.findWinner('o', containerI, containerJ)
+
+    // console.log('o', this.gameData.o)
+    // console.log('x', this.gameData.x)
+  }
+
+  getRandom (matrix) {
+    const i = Math.floor(Math.random() * this.boardSize)
+    const j = Math.floor(Math.random() * this.boardSize)
+    if (matrix[i][j] === null) {
+      return { i, j }
+    }
+    return this.getRandom(matrix)
+  }
+
+  getMatrix () {
+    const matrix = []
+    const array = new Array(this.boardSize).fill(null)
+    for (let i = 0; i < this.boardSize; i++) {
+      matrix.push([...array])
+    }
+    this.setMatrixLetter(matrix, 'o')
+    this.setMatrixLetter(matrix, 'x')
+    return matrix
+  }
+
+  setMatrixLetter (matrix, letter) {
+    for (let i in this.gameData[letter].rows) {
+      const arrayJ = this.gameData[letter].rows[i]
+      if (arrayJ.length) {
+        for (let j = 0; j < arrayJ.length; j++) {
+          matrix[i][arrayJ[j].j] = letter
+        }
+      }
+    }
+  }
+
+  getCorners (matrix) {
+    if (matrix[0][0] === null) {
+      return { i: 0, j: 0 }
+    }
+    if (matrix[0][2] === null) {
+      return { i: 0, j: 2 }
+    }
+    if (matrix[2][2] === null) {
+      return { i: 2, j: 2 }
+    }
+    if (matrix[2][0] === null) {
+      return { i: 2, j: 0 }
+    }
+    return null
+  }
+  probableWin (char) {
+    const coordsColumn = this.columnRowsCheck(char, 'columns', 'i')
+    if (coordsColumn) {
+      console.log('coordsColumn')
+      return coordsColumn
+    }
+
+    const coordsRow = this.columnRowsCheck(char, 'rows', 'j')
+    if (coordsRow) {
+      console.log('coordsRow')
+      return coordsRow
+    }
+
+    const coordMainDiag = this.mainDiagonalCheck(char)
+    if (coordMainDiag) {
+      console.log('coordMainDiag')
+      return coordMainDiag
+    }
+
+    const coordSecondDiag = this.secondaryDiagonalCheck(char)
+    if (coordSecondDiag) {
+      console.log('coordSecondDiag')
+      return coordSecondDiag
+    }
+  }
+
+  columnRowsCheck (char, rowOrColumn, iOrJ) {
+    const charData = this.gameData[char][rowOrColumn]
+    for (let key in charData) {
+      const charValue = charData[key]
+      if (charValue.length === 2) {
+        const probableWinChar = 3 - (charValue[0][iOrJ] + charValue[1][iOrJ])
+        const iOrJ2 = iOrJ === 'i' ? 'j' : 'i'
+        return { [iOrJ]: probableWinChar, [iOrJ2]: charValue[0][iOrJ2] }
+      }
+    }
+    return null
+  }
+
+  mainDiagonalCheck (char) {
+    const mainDiagonal = this.gameData[char].mainDiagonal
+
+    if (mainDiagonal.length === 2) {
+      const probableWinMainDiag = 3 - (mainDiagonal[0].i + mainDiagonal[1].i)
+      return { i: probableWinMainDiag, j: probableWinMainDiag }
+    }
+    return null
+  }
+
+  secondaryDiagonalCheck (char) {
+    const secondDiagonal = this.gameData[char].secondaryDiagonal
+
+    if (secondDiagonal.length === 2) {
+      const probableWinSecondI = 3 - (secondDiagonal[0].i + secondDiagonal[1].i)
+      const probableWinSecondJ = 3 - (secondDiagonal[0].j + secondDiagonal[1].j)
+      return { i: probableWinSecondI, j: probableWinSecondJ }
+    }
+    return null
   }
 
   gameResult (res) {

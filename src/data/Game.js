@@ -6,15 +6,16 @@ export default class Game {
   }
 
   makeMove (character, i, j) {
-    this[character].rows[i].push([i, j])
-    this[character].columns[j].push([i, j])
+    let dataCoords = { i: j, j: i }
+    this[character].rows[j].push(dataCoords)
+    this[character].columns[i].push(dataCoords)
 
     if (i === j) {
-      this[character].mainDiagonal.push([i, j])
+      this[character].mainDiagonal.push(dataCoords)
     }
 
     if (i + j === this.boardSize - 1) {
-      this[character].secondaryDiagonal.push([i, j])
+      this[character].secondaryDiagonal.push(dataCoords)
     }
   }
 
@@ -44,13 +45,6 @@ export default class Game {
   delBordEl (char, boardArr) {
     for (let el in char.rows) {
       char.rows[el].forEach(item => {
-        // let index = boardArr.findIndex(a =>
-        //   a.every((val, i) => char.rows[el] === val)
-        // )
-        // if (index !== -1) {
-        //   boardArr.splice(index, 1)
-        // }
-        // console.log(char.rows[el])
         boardArr.forEach(el => {
           if (el[0] === item[0] && el[1] === item[1]) {
             boardArr.splice(boardArr.indexOf(el), 1)
@@ -68,12 +62,13 @@ export default class Game {
   }
 
   getMaxLegth (character, i, j) {
-    return Math.max(
-      this[character].rows[i].length,
-      this[character].columns[j].length,
+    const max = Math.max(
+      this[character].rows[j].length,
+      this[character].columns[i].length,
       this[character].mainDiagonal.length,
-      this[character].secondaryDiagonal.length
+      this[character].secondaryDiagonal.length,
     )
+    return max
   }
 }
 
