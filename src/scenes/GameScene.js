@@ -11,6 +11,19 @@ export default class GameScene extends Phaser.Scene {
     this.spaceSize = 10
     this.gameData = new Game(this.boardSize)
     this.containersMatix = []
+    this.winCombos = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+    ]
+    this.huPlayer = 'o'
+    this.aiPlayer = 'x'
+    this.platformsArray = []
   }
 
   getPlatformSize () {
@@ -22,14 +35,21 @@ export default class GameScene extends Phaser.Scene {
 
   create () {
     // main game
+
+    this.origBoard = Array.from(Array(9).keys())
+    let nameCount = 0
     this.boardContainer = this.add.container(0, 0)
+
     for (let i = 0; i < 3; ++i) {
       this.containersMatix.push([])
       for (let j = 0; j < 3; ++j) {
-        const platformContainer = this.add.container(
-          i * (this.getPlatformSize() + this.spaceSize),
-          j * (this.getPlatformSize() + this.spaceSize),
-        )
+        const platformContainer = this.add
+          .container(
+            j * (this.getPlatformSize() + this.spaceSize),
+            i * (this.getPlatformSize() + this.spaceSize),
+          )
+          .setName(nameCount++)
+
         const platform = this.add.image(0, 0, 'platform')
         platformContainer.setInteractive(
           new Phaser.Geom.Rectangle(
@@ -44,8 +64,10 @@ export default class GameScene extends Phaser.Scene {
         this.boardContainer.add(platformContainer)
         platformContainer.setData({ i, j })
         this.containersMatix[i].push(platformContainer)
+        this.platformsArray.push(platformContainer)
       }
     }
+
     this.input.on('gameobjectdown', this.drawSymbol.bind(this), false)
 
     this.boardContainer.x =
@@ -55,203 +77,127 @@ export default class GameScene extends Phaser.Scene {
   }
 
   drawSymbol (pointer, target) {
-    const x = this.add.image(0, 0, 'x')
-    const [i, j] = target.getData(['i', 'j'])
-    target.add(x).removeInteractive()
+    // const [i, j] = target.getData(['i', 'j'])
 
-    const a = this.findWinner('x', i, j)
-    if (a < 9 && !this.win) {
-      this.ai()
+    if (typeof this.origBoard[target.name] === 'number') {
+      this.turn(target.name, this.huPlayer, target)
+
+      if (!this.checkTie()) {
+        const bestSpot = this.bestSpot()
+        this.turn(bestSpot, this.aiPlayer, this.platformsArray[bestSpot])
+      }
     }
   }
 
-  findWinner (char, i, j) {
-    this.gameData.makeMove(char, i, j)
-    const maxLength = this.gameData.getMaxLegth(char, i, j)
-    const getFilledBoardlength = this.gameData.getFilledBoardlength()
+  turn (squareId, player, target) {
+    this.origBoard[squareId] = player
 
-    if (getFilledBoardlength === this.boardSize * this.boardSize) {
-      this.noWinner()
-    }
-    if (maxLength === this.boardSize) {
-      this.winner(char)
-      this.win = true
-    }
-    this.gameData.getCurrentBoard()
-    return getFilledBoardlength
+    target.add(this.add.image(0, 0, player)).removeInteractive()
+
+    let gameWon = this.checkWin(this.origBoard, player)
+    if (gameWon) this.gameOver(gameWon)
   }
 
-  ai () {
-    let i
-    let j
+  checkWin (board, player) {
+    let plays = board.reduce((a, e, i) => (e === player ? a.concat(i) : a), [])
+    let gameWon = null
+    for (let [index, win] of this.winCombos.entries()) {
+      if (win.every(elem => plays.indexOf(elem) > -1)) {
+        gameWon = { index: index, player: player }
+        break
+      }
+    }
+    return gameWon
+  }
 
-    const oProbWin = this.probableWin('o')
-    const matrix = this.getMatrix()
+  getPlatformByName (name) {
+    return this.platformsArray.filter(platform => platform.name === name)[0]
+      .list[0]
+  }
 
-    if (oProbWin && matrix[oProbWin.i][oProbWin.j] === null) {
-      i = oProbWin.i
-      j = oProbWin.j
-    } else {
-      const xProbWin = this.probableWin('x')
-      console.log(xProbWin, 'xProbWin')
-      if (xProbWin && matrix[xProbWin.i][xProbWin.j] === null) {
-        i = xProbWin.i
-        j = xProbWin.j
+  gameOver (gameWon) {
+    for (let index of this.winCombos[gameWon.index]) {
+      const changeBgColor =
+        gameWon.player === this.huPlayer ? 0xffff66 : 0x0000ff
+
+      this.getPlatformByName(index).setTintFill(changeBgColor)
+    }
+  }
+
+  declareWinner (who) {
+    console.log(who)
+    // document.querySelector('.endgame').style.display = 'block'
+    // document.querySelector('.endgame .text').innerText = who
+  }
+
+  emptySquares () {
+    return this.origBoard.filter(s => typeof s === 'number')
+  }
+
+  bestSpot () {
+    return this.minmax(this.origBoard, this.aiPlayer).index
+  }
+
+  checkTie () {
+    if (this.emptySquares().length === 0) {
+      this.platformsArray.forEach(element => {
+        element.list[0].setTintFill(0xcc00ff)
+      })
+      this.declareWinner('Tie Game!')
+      return true
+    }
+    return false
+  }
+
+  minmax (newBoard, player) {
+    let availSpots = this.emptySquares()
+
+    if (this.checkWin(newBoard, this.huPlayer)) {
+      return { score: -10 }
+    } else if (this.checkWin(newBoard, this.aiPlayer)) {
+      return { score: 10 }
+    } else if (availSpots.length === 0) {
+      return { score: 0 }
+    }
+
+    let moves = []
+    for (let i = 0; i < availSpots.length; i++) {
+      let move = {}
+      move.index = newBoard[availSpots[i]]
+      newBoard[availSpots[i]] = player
+
+      if (player === this.aiPlayer) {
+        let result = this.minmax(newBoard, this.huPlayer)
+        move.score = result.score
       } else {
-        if (matrix[1][1] === null) {
-          i = 1
-          j = 1
-        } else {
-          const corners = this.getCorners(matrix)
-          if (corners) {
-            i = corners.i
-            j = corners.j
-          } else {
-            const random = this.getRandom(matrix)
-            i = random.i
-            j = random.j
-          }
+        let result = this.minmax(newBoard, this.aiPlayer)
+        move.score = result.score
+      }
+
+      newBoard[availSpots[i]] = move.index
+
+      moves.push(move)
+    }
+
+    let bestMove
+    if (player === this.aiPlayer) {
+      let bestScore = -10000
+      for (let i = 0; i < moves.length; i++) {
+        if (moves[i].score > bestScore) {
+          bestScore = moves[i].score
+          bestMove = i
+        }
+      }
+    } else {
+      let bestScore = 10000
+      for (let i = 0; i < moves.length; i++) {
+        if (moves[i].score < bestScore) {
+          bestScore = moves[i].score
+          bestMove = i
         }
       }
     }
-    console.log(i, j)
-    const o = this.add.image(0, 0, 'o')
-    const container = this.containersMatix[j][i]
-
-    const [containerI, containerJ] = container.getData(['i', 'j'])
-
-    container.add(o).removeInteractive()
-
-    this.findWinner('o', containerI, containerJ)
-
-    // console.log('o', this.gameData.o)
-    // console.log('x', this.gameData.x)
+    return moves[bestMove]
   }
-
-  getRandom (matrix) {
-    const i = Math.floor(Math.random() * this.boardSize)
-    const j = Math.floor(Math.random() * this.boardSize)
-    if (matrix[i][j] === null) {
-      return { i, j }
-    }
-    return this.getRandom(matrix)
-  }
-
-  getMatrix () {
-    const matrix = []
-    const array = new Array(this.boardSize).fill(null)
-    for (let i = 0; i < this.boardSize; i++) {
-      matrix.push([...array])
-    }
-    this.setMatrixLetter(matrix, 'o')
-    this.setMatrixLetter(matrix, 'x')
-    return matrix
-  }
-
-  setMatrixLetter (matrix, letter) {
-    for (let i in this.gameData[letter].rows) {
-      const arrayJ = this.gameData[letter].rows[i]
-      if (arrayJ.length) {
-        for (let j = 0; j < arrayJ.length; j++) {
-          matrix[i][arrayJ[j].j] = letter
-        }
-      }
-    }
-  }
-
-  getCorners (matrix) {
-    if (matrix[0][0] === null) {
-      return { i: 0, j: 0 }
-    }
-    if (matrix[0][2] === null) {
-      return { i: 0, j: 2 }
-    }
-    if (matrix[2][2] === null) {
-      return { i: 2, j: 2 }
-    }
-    if (matrix[2][0] === null) {
-      return { i: 2, j: 0 }
-    }
-    return null
-  }
-  probableWin (char) {
-    const coordsColumn = this.columnRowsCheck(char, 'columns', 'i')
-    if (coordsColumn) {
-      console.log('coordsColumn')
-      return coordsColumn
-    }
-
-    const coordsRow = this.columnRowsCheck(char, 'rows', 'j')
-    if (coordsRow) {
-      console.log('coordsRow')
-      return coordsRow
-    }
-
-    const coordMainDiag = this.mainDiagonalCheck(char)
-    if (coordMainDiag) {
-      console.log('coordMainDiag')
-      return coordMainDiag
-    }
-
-    const coordSecondDiag = this.secondaryDiagonalCheck(char)
-    if (coordSecondDiag) {
-      console.log('coordSecondDiag')
-      return coordSecondDiag
-    }
-  }
-
-  columnRowsCheck (char, rowOrColumn, iOrJ) {
-    const charData = this.gameData[char][rowOrColumn]
-    for (let key in charData) {
-      const charValue = charData[key]
-      if (charValue.length === 2) {
-        const probableWinChar = 3 - (charValue[0][iOrJ] + charValue[1][iOrJ])
-        const iOrJ2 = iOrJ === 'i' ? 'j' : 'i'
-        return { [iOrJ]: probableWinChar, [iOrJ2]: charValue[0][iOrJ2] }
-      }
-    }
-    return null
-  }
-
-  mainDiagonalCheck (char) {
-    const mainDiagonal = this.gameData[char].mainDiagonal
-
-    if (mainDiagonal.length === 2) {
-      const probableWinMainDiag = 3 - (mainDiagonal[0].i + mainDiagonal[1].i)
-      return { i: probableWinMainDiag, j: probableWinMainDiag }
-    }
-    return null
-  }
-
-  secondaryDiagonalCheck (char) {
-    const secondDiagonal = this.gameData[char].secondaryDiagonal
-
-    if (secondDiagonal.length === 2) {
-      const probableWinSecondI = 3 - (secondDiagonal[0].i + secondDiagonal[1].i)
-      const probableWinSecondJ = 3 - (secondDiagonal[0].j + secondDiagonal[1].j)
-      return { i: probableWinSecondI, j: probableWinSecondJ }
-    }
-    return null
-  }
-
-  gameResult (res) {
-    const result = this.add.text(0, 100, res, {
-      font: '25px Arial',
-      fill: '#fff',
-    })
-    result.setStroke('#292929', 16)
-    result.setShadow(2, 2, '#743f4a', 2, true, true)
-    result.setX((gameConfig.width - result.width) / 2)
-  }
-
-  noWinner () {
-    this.gameResult('No Winner')
-  }
-
-  winner (char) {
-    this.gameResult(`The winner is ${char}`)
-    this.scene.pause(SCENE_GAME)
-  }
-
   update () {}
 }
